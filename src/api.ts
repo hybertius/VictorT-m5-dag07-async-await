@@ -13,6 +13,7 @@ export async function hamtaRattNamn(id: number): Promise<string> {
   const ratt = await hamtaRattFranServer(id, 10);
   return ratt.namn;
 }
+// Skillnaden: funktion 2 låter felet gå vidare till anroparen.
 
 // 3. Som 2, men om något går fel returnerar funktionen null istället för att kasta fel (try/catch).
 export async function hamtaRattEllerNull(id: number): Promise<Ratt | null> {
@@ -23,6 +24,7 @@ export async function hamtaRattEllerNull(id: number): Promise<Ratt | null> {
     return null;
   }
 }
+// 3. Hämtar hela rätt-objektet baserat på id, returnerar null vid fel.
 
 // 4. Hämta två rätter EFTER varandra (await, sedan await). Returnerar [ratt1, ratt2]. ms är väntetiden per anrop.
 export async function hamtaTvaRatterEfterVarandra(id1: number, id2: number, ms: number = 100): Promise<Ratt[]> {
@@ -39,6 +41,9 @@ export async function hamtaTvaRatterParallellt(id1: number, id2: number, ms: num
   ]);
   return [ratt1, ratt2];
 }
+
+// Båda anropen startar innan vi väntar på Promise.all, så väntetiderna överlappar.
+// Sekventiellt startar det andra anropet först när det första är klart, så väntetiderna adderas.
 
 // 6. Försök upp till maxForsok gånger. anropFn är en funktion som returnerar en promise.
 //    Lyckas något försök: returnera resultatet. Misslyckas alla: kasta det SISTA felet.
