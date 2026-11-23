@@ -5,40 +5,63 @@ import type { Ratt, Tillstand } from "./typer";
 
 // 1. Hämta hela menyn (använd hamtaMenyFranServer med 10 ms). Returnerar menyn.
 export async function hamtaMeny(): Promise<Ratt[]> {
-  // TODO
+  return await hamtaMenyFranServer(10);
 }
 
 // 2. Hämta namnet på en rätt (hamtaRattFranServer(id, 10)). Okänt id: låt felet följa med (fånga det inte).
 export async function hamtaRattNamn(id: number): Promise<string> {
-  // TODO
+  const ratt = await hamtaRattFranServer(id, 10);
+  return ratt.namn;
 }
 
 // 3. Som 2, men om något går fel returnerar funktionen null istället för att kasta fel (try/catch).
 export async function hamtaRattEllerNull(id: number): Promise<Ratt | null> {
-  // TODO
+  try {
+    const ratt = await hamtaRattFranServer(id, 10);
+    return ratt;
+  } catch {
+    return null;
+  }
 }
 
 // 4. Hämta två rätter EFTER varandra (await, sedan await). Returnerar [ratt1, ratt2]. ms är väntetiden per anrop.
 export async function hamtaTvaRatterEfterVarandra(id1: number, id2: number, ms: number = 100): Promise<Ratt[]> {
-  // TODO
+  const ratt1 = await hamtaRattFranServer(id1, ms);
+  const ratt2 = await hamtaRattFranServer(id2, ms);
+  return [ratt1, ratt2];
 }
 
 // 5. Samma sak, men båda ANROPEN startas samtidigt (Promise.all). Ska gå dubbelt så snabbt.
 export async function hamtaTvaRatterParallellt(id1: number, id2: number, ms: number = 100): Promise<Ratt[]> {
-  // TODO
+  const [ratt1, ratt2] = await Promise.all([
+    hamtaRattFranServer(id1, ms),
+    hamtaRattFranServer(id2, ms)
+  ]);
+  return [ratt1, ratt2];
 }
 
 // 6. Försök upp till maxForsok gånger. anropFn är en funktion som returnerar en promise.
 //    Lyckas något försök: returnera resultatet. Misslyckas alla: kasta det SISTA felet.
 //    Tips: en for-loop med try/catch inuti, och spara det senaste felet i en variabel.
 export async function hamtaMedForsok<T>(anropFn: () => Promise<T>, maxForsok: number): Promise<T> {
-  // TODO
+  let senasteFel: any;
+  for (let i = 0; i < maxForsok; i++) {
+    try {
+      return await anropFn();
+    } catch (err) {
+      senasteFel = err;
+    }
+  }
+  throw senasteFel;
 }
 
 // 7. Ge en promise en tidsgräns. Är den inte klar inom ms millisekunder: avvisa med
 //    new Error("Tidsgränsen överskreds"). Tips: Promise.race med en promise som avvisas efter ms.
 export function medTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  // TODO
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Tidsgränsen överskreds")), ms))
+  ]);
 }
 
 // 8. Tillståndsmaskinen för att ladda något: laddar -> klar / tomt / fel.
@@ -48,5 +71,15 @@ export function medTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 //      { typ: "tomt" }                         om listan är tom
 //      { typ: "fel", meddelande: "..." }       om hamtaFn misslyckas (felets message)
 export async function laddaMeny(hamtaFn: () => Promise<Ratt[]>, vidTillstand: (tillstand: Tillstand) => void): Promise<void> {
-  // TODO
+  vidTillstand({ typ: "laddar" });
+  try {
+    const ratter = await hamtaFn();
+    if (ratter.length > 0) {
+      vidTillstand({ typ: "klar", ratter });
+    } else {
+      vidTillstand({ typ: "tomt" });
+    }
+  } catch (err: any) {
+    vidTillstand({ typ: "fel", meddelande: err.message });
+  }
 }
