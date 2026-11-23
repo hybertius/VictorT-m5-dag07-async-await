@@ -97,3 +97,25 @@ export async function laddaMeny(hamtaFn: () => Promise<Ratt[]>, vidTillstand: (t
 }
 // 9. Exempel på hur man kan använda laddaMeny med en timeout:
 //    laddaMeny(() => medTimeout(hamtaMenyFranServer(10), 5000), vidTillstand);
+
+// Fördjupning: hämta alla rätter parallellt utan att ett fel stoppar resten.
+export async function hamtaAllaForsiktigt(idLista: number[]): Promise<{
+  lyckade: Ratt[];
+  misslyckade: { id: number; fel: unknown }[];
+}> {
+  const utfall = await Promise.allSettled(
+    idLista.map((id) => hamtaRattFranServer(id, 10))
+  );
+  const lyckade: Ratt[] = [];
+  const misslyckade: { id: number; fel: unknown }[] = [];
+
+  utfall.forEach((resultat, index) => {
+    if (resultat.status === "fulfilled") {
+      lyckade.push(resultat.value);
+    } else {
+      misslyckade.push({ id: idLista[index], fel: resultat.reason });
+    }
+  });
+
+  return { lyckade, misslyckade };
+}
