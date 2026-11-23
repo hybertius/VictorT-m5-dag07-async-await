@@ -45,6 +45,7 @@ export async function hamtaTvaRatterParallellt(id1: number, id2: number, ms: num
 // Båda anropen startar innan vi väntar på Promise.all, så väntetiderna överlappar.
 // Sekventiellt startar det andra anropet först när det första är klart, så väntetiderna adderas.
 
+
 // 6. Försök upp till maxForsok gånger. anropFn är en funktion som returnerar en promise.
 //    Lyckas något försök: returnera resultatet. Misslyckas alla: kasta det SISTA felet.
 //    Tips: en for-loop med try/catch inuti, och spara det senaste felet i en variabel.
@@ -59,6 +60,12 @@ export async function hamtaMedForsok<T>(anropFn: () => Promise<T>, maxForsok: nu
   }
   throw senasteFel;
 }
+
+// Vid varje misslyckat försök sparas felet. Om alla försök misslyckas,
+// kastas det senast sparade felet.
+
+// medTimeout: returnerar en promise som avvisas om den ursprungliga promisen
+// inte blir klar inom ms millisekunder.
 
 // 7. Ge en promise en tidsgräns. Är den inte klar inom ms millisekunder: avvisa med
 //    new Error("Tidsgränsen överskreds"). Tips: Promise.race med en promise som avvisas efter ms.
@@ -88,3 +95,5 @@ export async function laddaMeny(hamtaFn: () => Promise<Ratt[]>, vidTillstand: (t
     vidTillstand({ typ: "fel", meddelande: err.message });
   }
 }
+// 9. Exempel på hur man kan använda laddaMeny med en timeout:
+//    laddaMeny(() => medTimeout(hamtaMenyFranServer(10), 5000), vidTillstand);
